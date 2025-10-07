@@ -11,143 +11,125 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.restaurantapp.ui.theme.LittleLemonColor
-import androidx.core.content.edit
 
+
+
+fun performLogout(context: Context) {
+    // 1. Get a reference to your SharedPreferences file
+    val sharedPreferences = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+
+    // 2. Get an editor
+    sharedPreferences.edit {
+
+        // 3. Clear all the data in this preference file
+        clear()
+
+        // 4. Apply the changes
+    }
+}
 
 @Composable
-fun onBoarding(navController: NavHostController) {
-    var localContext = LocalContext.current
+fun ProfileScreen(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+    // Use the same keys you used when saving
+    val firstName = sharedPreferences.getString("FIRST_NAME", "")
+    val lastName = sharedPreferences.getString("LAST_NAME", "")
+    val email = sharedPreferences.getString("EMAIL", "")
     Column(modifier= Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally) {
         Image(painter= painterResource(R.drawable.littlelemonimgtxt)
-        , contentDescription = "Top Bar Logo",
+            , contentDescription = "Top Bar Logo",
             modifier= Modifier.width(200.dp)
                 .align(Alignment.CenterHorizontally)
                 .padding(20.dp))
 
         Box(modifier = Modifier.
-            fillMaxWidth()
+        fillMaxWidth()
             .background(color= LittleLemonColor.green)
             .padding(50.dp),
             contentAlignment = Alignment.Center){
-            Text(text="Let's get to know you",
+            Text(text="Welcome to your profile",
                 style= MaterialTheme.typography.headlineSmall,
                 color = LittleLemonColor.cloud)
         }
-
         Text(text="Personal Information",
             style= MaterialTheme.typography.titleMedium,
             modifier= Modifier
                 .align(Alignment.Start)
                 .padding(start=10.dp, top=40.dp, bottom=30.dp),
-            fontWeight = FontWeight.Bold
-        )
-
-        var firstName = remember { mutableStateOf("") }
-
-        FormTextField(
-            value = firstName.value,
-            onValueChange = { firstName.value = it },
-            label = "First Name"
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
         )
 
 
-        var lastName = remember { mutableStateOf("") }
-        FormTextField(
-            value=lastName.value,
-            onValueChange = {lastName.value = it},
-            label="Last Name"
+        //for FirstName
+        ForTextField(
+            label = "First Name",
+            value = firstName ?: "",
         )
 
-        var forEmail = remember { mutableStateOf("") }
-        FormTextField(
-            value=forEmail.value,
-            onValueChange = {forEmail.value = it},
-            label="Email",
+        //for LastName
+        ForTextField(
+            label = "Last Name",
+            value = lastName ?: "",
+        )
+
+        //for Email
+        ForTextField(
+            label = "Email",
+            value = email ?: "",
             keyboardType = KeyboardType.Email
-        )
+        )// Set keyboard type to Email
 
-        Button(onClick= {
-            if(firstName.value.isNotEmpty() &&
-                lastName.value.isNotEmpty() &&
-                forEmail.value.isNotEmpty()
-            ){
-            saveUserData(firstName.value, lastName.value, forEmail.value, context = localContext)
-            navController.navigate(Home.route) {
-                popUpTo(Onboarding.route) {
-                    inclusive = true
+        Button(
+            onClick ={
+            performLogout(context)
+            //Navigate to the onboarding screen and clear the history
+            navController.navigate("onBoarding"){
+                popUpTo(navController.graph.startDestinationId){
+                    inclusive=true
                 }
-                launchSingleTop = true
+                launchSingleTop= true
 
             }
-        }
-            else {
-                //Showing toast message saying all fields are madatory
-                android.widget.Toast.makeText(
-                    localContext,
-                    "All fields are mandatory",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
 
-            }
-                        },
+        },
             colors = ButtonDefaults.buttonColors(LittleLemonColor.yellow),
-            modifier=Modifier.fillMaxWidth(0.8f)
-                .padding(top=20.dp)
+            modifier = Modifier.padding(20.dp)
+                .fillMaxWidth(0.8f)
+            ){
 
-            ) {
-            Text("Register")
+            Text(text = "Logout", color = Color.Black)
         }
 
-
-
-
-
-    }
-    val context = LocalContext.current
-
-}
-
-
-
-fun saveUserData(firstName:String,
-                 lastName:String,
-                 email:String,
-                 context: Context
-                 ){
-    val sharedPreferences=context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-    sharedPreferences.edit {
-        putString("FIRST_NAME", firstName)
-        putString("LAST_NAME", lastName)
-        putString("EMAIL", email)
-        putBoolean("IS_LOGGED_IN", true)
     }
 }
 
 
 @Composable
-fun FormTextField(
+fun ForTextField(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit,
+    onValueChange: (String) -> Unit={},
     keyboardType: KeyboardType = KeyboardType.Text // Default keyboard type
 ) {
     Column(modifier=Modifier.padding(10.dp)) {
@@ -165,14 +147,14 @@ fun FormTextField(
             modifier = Modifier.fillMaxWidth(), // Make the text field take the full width
             singleLine = true, // Ensure the input is a single line
             shape = MaterialTheme.shapes.medium, // Apply rounded corners
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            readOnly = true
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun obBoardingScreen(){
-    onBoarding(rememberNavController())
-
+fun ProfileScreenPreview(){
+    ProfileScreen(navController = rememberNavController())
 }
