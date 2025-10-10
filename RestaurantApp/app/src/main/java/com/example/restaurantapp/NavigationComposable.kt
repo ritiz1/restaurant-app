@@ -1,21 +1,22 @@
 package com.example.restaurantapp
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
 
 
 @Composable
-fun Navigation(startDestination:String,httpClient: HttpClient) {
+fun Navigation(
+    startDestination: String,
+    httpClient: HttpClient,
+    modifier: Modifier,
+    navController: NavHostController
+) {
 
-    var navController = rememberNavController()
     NavHost(navController=navController,startDestination= startDestination){
         composable(Home.route){
 
