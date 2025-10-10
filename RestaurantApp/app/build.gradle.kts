@@ -42,10 +42,15 @@ android {
 }
 
 dependencies {
+    implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("io.ktor:ktor-client-android:2.1.3")
-    implementation("io.ktor:ktor-client-content-negotiation:2.1.3")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.1.3")
+    val ktor_version = "2.3.12" // Using a recent, stable version
+
+    // Ktor Dependencies
+    implementation("io.ktor:ktor-client-android:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version") // For coroutines support
