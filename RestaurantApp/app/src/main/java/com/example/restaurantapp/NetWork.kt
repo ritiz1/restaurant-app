@@ -25,3 +25,9 @@ data class MenuItemNetwork(
     @SerialName("category")
     val category: String
 )
+
+@Serializable
+data class MenuNetwork(
+    @SerialName("menu")
+    val menu: List<MenuItemNetwork>
+)
