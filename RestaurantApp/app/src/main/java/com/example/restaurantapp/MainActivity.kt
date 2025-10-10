@@ -4,6 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
@@ -12,41 +19,64 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-
 class MainActivity : ComponentActivity() {
 
+    // Your HttpClient is perfect here.
     private val httpClient by lazy {
         HttpClient(Android) {
             install(ContentNegotiation) {
                 json(
-                    // The Json configuration object you already have
                     json = Json {
                         ignoreUnknownKeys = true
                         isLenient = true
                     },
-                    // THIS IS THE FIX: Tell Ktor to process any content type as JSON
                     contentType = ContentType.Any
                 )
             }
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // 1. --- THIS IS THE FIX ---
+        // Perform the login check here, once, when the app starts.
+        val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
+        val isLoggedIn = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
+        val startDestination = if (isLoggedIn) Home.route else Onboarding.route
+
         setContent {
-            //Getting SharedPreferences instance
-            val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
+            // 2. We no longer need the AppRoot composable, making this simpler.
+            val navController = rememberNavController()
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            val scope = rememberCoroutineScope()
 
-            //Reading the login status. Default set to "False" if it is not found:
-            val isLoggedIn = sharedPreferences.getBoolean("IS_LOGGED_IN", false)
-            val startDestinations =if(isLoggedIn) Home.route else Onboarding.route
-            Navigation(startDestinations,httpClient)
-
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    drawerContent(navController, drawerState, scope)
+                }
+            ) {
+                Scaffold(
+                    topBar = {
+                        MyTopAppBar(
+                            drawerState = drawerState,
+                            scope = scope,
+                            onCartClick = { /* Navigate to cart */ },
+                            navController=navController
+                        )
+                    }
+                ) { innerPadding ->
+                    // 3. Pass the startDestination directly to your Navigation composable.
+                    Navigation(
+                        startDestination = startDestination,
+                        httpClient = httpClient,
+                        navController = navController,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+            }
         }
     }
 }
-
-
-
-
-
