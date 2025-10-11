@@ -12,7 +12,7 @@ import io.ktor.client.HttpClient
 @Composable
 fun Navigation(
     startDestination: String,
-    httpClient: HttpClient,
+    viewModel: MenuViewModel,
     modifier: Modifier,
     navController: NavHostController
 ) {
@@ -21,7 +21,7 @@ fun Navigation(
         composable(Home.route){
 
             HomeScreen(
-                navController, httpClient)
+                navController, viewModel)
         }
 
         composable(Onboarding.route){
