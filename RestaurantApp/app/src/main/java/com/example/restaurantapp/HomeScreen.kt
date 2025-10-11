@@ -11,14 +11,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -37,22 +43,33 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 
 @Composable
-fun HomeScreen(navController: NavHostController,httpClient: HttpClient) {
+fun HomeScreen(navController: NavHostController,viewModel:MenuViewModel) {
+    val menuItems by viewModel.menuItems.collectAsState()
+    var searchPhrase by remember { mutableStateOf("") }
     Column {
         UpperPanel()
-        var menuItems by remember { mutableStateOf(emptyList<MenuItemNetwork>()) }
 
-        // 2. This LaunchedEffect runs the network request when the screen is first displayed.
-        LaunchedEffect(Unit) {
-            try {
-                val menuNetwork: MenuNetwork = httpClient.get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu.json").body()
+        //The search button
+        TextField(
+            value = searchPhrase,
+            onValueChange = { newValue -> searchPhrase = newValue },
+            placeholder = {Text("Enter the Search Phrase")},
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Search, contentDescription ="Search Icon" )
+            },
 
-                // Just assign the list directly. The URLs are now correct from the server.
-                menuItems = menuNetwork.menu
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+        )
 
-            } catch (e: Exception) {
-                Log.e("HomeScreen", "Error fetching menu: ${e.message}")
-            }
+        //Now filtering the menu Items
+        val filteredItems = if(searchPhrase.isNotBlank()){
+            menuItems.filter{it.name.contains(searchPhrase, ignoreCase = true)}
+
+        }
+        else {
+            menuItems
         }
 
         if (menuItems.isEmpty()) {
@@ -63,7 +80,7 @@ fun HomeScreen(navController: NavHostController,httpClient: HttpClient) {
         } else {
             // But once the data is loaded, show the real list
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(menuItems) { menuItem ->
+                items(filteredItems) { menuItem ->
                     MenuItemRow(menuItem = menuItem) // Your composable for a single item
                 }
             }
@@ -78,7 +95,7 @@ fun HomeScreen(navController: NavHostController,httpClient: HttpClient) {
 // You create this function. It's the "template" for one row.
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MenuItemRow(menuItem: MenuItemNetwork) {
+fun MenuItemRow(menuItem: MenuItemEntity) {
     Card(onClick = {}) {
         Row(
             modifier = Modifier
@@ -86,15 +103,15 @@ fun MenuItemRow(menuItem: MenuItemNetwork) {
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = menuItem.title, style = MaterialTheme.typography.bodyLarge)
+                Text(text = menuItem.name, style = MaterialTheme.typography.bodyLarge)
                 Text(
                     text = "$${menuItem.price}", style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold
                 )
             }
             GlideImage(
-                model = menuItem.image,
-                contentDescription = "${menuItem.title} image",
+                model = menuItem.imageUrl,
+                contentDescription = "${menuItem.name} image",
                 modifier = Modifier.size(90.dp)
                     .clip(shape = RoundedCornerShape(4.dp))
             )
@@ -106,5 +123,3 @@ fun MenuItemRow(menuItem: MenuItemNetwork) {
 
 
 }
-
-

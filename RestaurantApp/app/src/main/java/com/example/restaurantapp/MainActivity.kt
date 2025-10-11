@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val scope = rememberCoroutineScope()
+            val menuViewModel: MenuViewModel=viewModel()
 
             ModalNavigationDrawer(
                 drawerState = drawerState,
@@ -71,7 +73,9 @@ class MainActivity : ComponentActivity() {
                     // 3. Pass the startDestination directly to your Navigation composable.
                     Navigation(
                         startDestination = startDestination,
-                        httpClient = httpClient,
+                        viewModel = menuViewModel,
+
+
                         navController = navController,
                         modifier = Modifier.padding(innerPadding)
                     )
